@@ -1,32 +1,50 @@
 #!/usr/bin/env python3
-"""The Auth class"""
+"""
+Module that creates a class to manage
+API authentication
+"""
 from flask import request
-from typing import List, TypeVar
+from typing import List, Optional, TypeVar
+import re
 
 
 class Auth:
-    """Class to manage the API authentication
     """
-
-    def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
-        """Return True `path` is not in `excluded_paths`
-        with slash tolerance
-        Note: All paths in `excluded_paths` end by a '/'
+    Class template for the authentication
+    system
+    """
+    def require_auth(self, path: str, excluded_path: List[str]) -> bool:
         """
-
-        # If None or empty
-        if not path or not excluded_paths:
+        Returns False if path is in excluded_path
+        """
+        if path is None:
             return True
+        if excluded_path is None or len(excluded_path) == 0:
+            return True
+        if path:
+            for exclude in excluded_path:
+                last_tag = exclude.split('/')[-1]
+                if last_tag.endswith('*'):
+                    last_tag = last_tag[0:-1]
+                    if last_tag in path:
+                        return False
+            if path in excluded_path or path + '/' in excluded_path:
+                return False
+        return True
 
-        # Add a '/' to the end of `path` if it doesn't have it
-        if not path.endswith('/'):
-            path += '/'
-
-        # Return the membership test result
-        return path not in excluded_paths
-
-    def authorization_header(self, request=None) -> str:
+    def authorization_header(self, request=None) -> Optional[str]:
+        """
+        Returns None or str accrding to request
+        """
+        if not request:
+            return None
+        authorization = request.headers.get('Authorization')
+        if authorization:
+            return authorization
         return None
 
     def current_user(self, request=None) -> TypeVar('User'):
+        """
+        Returns None or User according to request
+        """
         return None
